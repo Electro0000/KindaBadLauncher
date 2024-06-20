@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Open in About:Blank and Close Original</title>
+    <title>Click Image to Open in About:Blank</title>
     <script>
         function openInBlank() {
             const newWindow = window.open("about:blank");
             if (newWindow) {
                 const iframe = newWindow.document.createElement("iframe");
-                iframe.src = "https://ovo-steel.vercel.app/1.4.4/"; // Replace with your desired URL
+                iframe.src = "https://arjun99ab.github.io/ovo/src/van1.4.4/"; // Replace with your desired URL
                 iframe.style.width = "100%";
                 iframe.style.height = "100%";
                 iframe.style.border = "none";
@@ -22,8 +22,8 @@
         }
     </script>
 </head>
-<body onload="openInBlank()">
-    <h1>Opening in about:blank...</h1>
-    <p>If the new window doesn't open, please check your popup blocker settings.</p>
+<body>
+    
+    <img src="https://www.speedrun.com/static/game/m1zjml06/cover.png?v=e1d79c8" alt="Click to open in about:blank" style="cursor: pointer;" onclick="openInBlank()">
 </body>
 </html>
