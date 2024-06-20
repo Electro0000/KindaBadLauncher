@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open in About:Blank and Close Original</title>
+    <script>
+        function openInBlank() {
+            const newWindow = window.open("about:blank");
+            if (newWindow) {
+                const iframe = newWindow.document.createElement("iframe");
+                iframe.src = "https://ovo-steel.vercel.app/1.4.4/"; // Replace with your desired URL
+                iframe.style.width = "100%";
+                iframe.style.height = "100%";
+                iframe.style.border = "none";
+                newWindow.document.body.appendChild(iframe);
+                newWindow.document.body.style.margin = "0";
+                window.close();
+            } else {
+                alert("Failed to open new window. Please check your popup blocker settings.");
+            }
+        }
+    </script>
+</head>
+<body onload="openInBlank()">
+    <h1>Opening in about:blank...</h1>
+    <p>If the new window doesn't open, please check your popup blocker settings.</p>
+</body>
+</html>
