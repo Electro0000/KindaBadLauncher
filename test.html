@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Number Explorer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6C5CE7;
+            --secondary-color: #FF7675;
+            --background-color: #F0F3F7;
+            --text-color: #2D3436;
+            --card-background: #FFFFFF;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* Easing function for smooth transition */
+        }
+        .dark-mode {
+            --primary-color: #A29BFE;
+            --secondary-color: #FF7675;
+            --background-color: #2D3436;
+            --text-color: #F0F3F7;
+            --card-background: #4A4A4A;
+            --card-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1, h2 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 2.5em;
+            letter-spacing: 1.2px;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-size: 1.8em;
+        }
+        .card {
+            background-color: var(--card-background);
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+        .card:hover {
+            background: linear-gradient(135deg, #6C5CE7, #FF7675);
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        #inputSection {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            padding: 12px 15px;
+            font-size: 16px;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            outline: none;
+            transition: var(--transition);
+            margin-right: 10px;
+            width: 200px;
+            background-color: var(--card-background);
+            color: var(--text-color);
+        }
+        input[type="number"]:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #5A4ECC;
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #primes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .prime {
+            margin: 10px;
+            padding: 15px 20px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 25px;
+            font-weight: 600;
+            opacity: 0;
+            transform: scale(0.5);
+            animation: popIn 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; /* Slower and smoother easing */
+            font-size: 1.2em;
+            transition: all 0.6s ease-in-out;
+        }
+        #stats, #primeCheck {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        #largestPrime {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        #primeDistribution {
+            width: 100%;
+            height: 300px;
+        }
+        @keyframes popIn {
+            to { opacity: 1; transform: scale(1); }
+        }
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .flex-item {
+            flex-basis: 100%;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            input[type="number"], button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            #inputSection {
+                flex-direction: column;
+            }
+        }
+        #downloadPrimes {
+            display: block;
+            margin: 30px auto 0;
+            background-color: var(--secondary-color);
+        }
+        #downloadPrimes:hover {
+            background-color: #FF6B6B;
+        }
+        #darkModeToggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--card-background);
+            color: var(--text-color);
+            border: 2px solid var(--primary-color);
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        #darkModeToggle:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Prime Number Explorer</h1>
+        <div class="card">
+            <div id="inputSection">
+                <input type="number" id="limit" placeholder="Enter limit (-1 for no limit)" min="-1">
+                <button id="findPrimes">Find Primes</button>
+            </div>
+            <div id="primes"></div>
+            <div id="stats"></div>
+        </div>
+        <div class="flex-container">
+            <div class="card flex-item">
+                <h2>Prime Distribution</h2>
+                <canvas id="primeDistribution"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Prime Checker</h2>
+            <input type="number" id="checkPrime" placeholder="Enter a number to check">
+            <button id="checkPrimeBtn">Check Prime</button>
+            <div id="primeCheck"></div>
+        </div>
+        <button id="downloadPrimes">Download Primes</button>
+    </div>
+    <button id="darkModeToggle">Toggle Dark Mode</button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+        let allPrimes = [];
+        let isRunning = false;
+        let primeDistributionChart;
+
+        function isPrime(n) {
+            if (n < 2) return false;
+            for (let i = 2; i <= Math.sqrt(n); i++) {
+                if (n % i === 0) return false;
+            }
+            return true;
+        }
+
+        async function* generatePrimes(limit) {
+            let n = 2;
+            while ((limit === -1 || n <= limit) && isRunning) {
+                if (isPrime(n)) {
+                    yield n;
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                n++;
+            }
+        }
+
+        function updatePrimeDistribution() {
+            const ctx = document.getElementById('primeDistribution').getContext('2d');
+            const data = allPrimes.reduce((acc, prime) => {
+                const bucket = Math.floor(prime / 1000) * 1000;  // Adjusted to group by 1000s for better visualization
+                acc[bucket] = (acc[bucket] || 0) + 1;
+                return acc;
+            }, {});
+
+            const chartData = {
+                labels: Object.keys(data),
+                datasets: [{
+                    label: 'Number of Primes per Range',
+                    data: Object.values(data),
+                    backgroundColor: 'rgba(108, 92, 231, 0.6)',  // Smoother purple tone
+                    borderColor: 'rgba(108, 92, 231, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            if (primeDistributionChart) {
+                primeDistributionChart.data = chartData;
+                primeDistributionChart.update();
+            } else {
+                primeDistributionChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: true },
+                            x: { beginAtZero: true, title: { display: true, text: 'Prime Ranges (Grouped by 1000s)' } }  // Clearer X-axis title
+                        }
+                    }
+                });
+            }
+        }
+
+        async function findAndDisplayPrimes(limit) {
+            const primesDiv = document.getElementById('primes');
+            const statsDiv = document.getElementById('stats');
+            const downloadButton = document.getElementById('downloadPrimes');
+            
+            primesDiv.innerHTML = '';
+            statsDiv.innerHTML = '';
+            downloadButton.style.display = 'none';
+            allPrimes = [];
+
+            let count = 0;
+            let largest = 0;
+            
+            for await (let prime of generatePrimes(limit)) {
+                allPrimes.push(prime);
+                if (count < 100) {
+                    const primeSpan = document.createElement('span');
+                    primeSpan.textContent = prime;
+                    primeSpan.className = 'prime';
+                    primesDiv.appendChild(primeSpan);
+                } else if (count === 100) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'prime';
+                    primesDiv.appendChild(ellipsis);
+                }
+                largest = prime;
+                count++;
+                
+                statsDiv.innerHTML = `Total primes found: ${count}<br>Largest prime: <span id="largestPrime">${largest}</span>`;
+                
+                if (count % 10 === 0) {
+                    updatePrimeDistribution();
+                }
+            }
+
+            updatePrimeDistribution();
+            downloadButton.style.display = 'block';
+        }
+
+        document.getElementById('findPrimes').addEventListener('click', function() {
+            if (isRunning) {
+                isRunning = false;
+                this.textContent = 'Find Primes';
+                return;
+            }
+
+            const limitInput = document.getElementById('limit').value;
+            const limit = limitInput === '-1' ? -1 : parseInt(limitInput);
+            
+            if ((isNaN(limit) && limitInput !== '-1') || (limit < -1)) {
+                alert('Please enter a valid number (-1 or greater).');
+                return;
+            }
+            
+            isRunning = true;
+            this.textContent = 'Stop';
+            findAndDisplayPrimes(limit);
+        });
+
+        document.getElementById('checkPrimeBtn').addEventListener('click', function() {
+            const number = parseInt(document.getElementById('checkPrime').value);
+            const result = isPrime(number);
+            document.getElementById('primeCheck').textContent = result ? 
+                `${number} is prime!` : 
+                `${number} is not prime.`;
+        });
+
+        document.getElementById('downloadPrimes').addEventListener('click', function() {
+            const primesText = allPrimes.join('\\n');
+            const blob = new Blob([primesText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'primes.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            if (primeDistributionChart) {
+                primeDistributionChart.destroy();
+                primeDistributionChart = null;
+                updatePrimeDistribution();
+            }
+        });
+    </script>
+</body>
+</html>
