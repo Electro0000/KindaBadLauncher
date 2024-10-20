@@ -215,7 +215,7 @@ def download_thread(task):
 def open_add_download_window():
     add_window = tk.Toplevel(root)
     add_window.title("Add Download")
-    add_window.geometry("450x550")
+    add_window.geometry("450x650")
     
     # Ensure the add window stays on top of the main window
     add_window.transient(root)
