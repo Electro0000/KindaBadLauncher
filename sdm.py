@@ -414,7 +414,7 @@ def open_settings():
 
 # Create the main window
 root = tk.Tk()
-root.title("Faster IDM-like Download Manager")
+root.title("SlowDownloadManager")
 root.geometry("1000x600")  # Increased height to fit all elements properly
 
 # Initialize the BooleanVar after root window is created
