@@ -38,7 +38,6 @@ def is_valid_url(url):
     )
     return re.match(regex, url) is not None
 
-# Download Task Class
 class DownloadTask:
     def __init__(self, url, dest_folder, filename=None, retries=3):
         self.url = url
@@ -58,6 +57,7 @@ class DownloadTask:
         self.start_time = 0
         self.download_speed_limit = DEFAULT_SPEED_LIMIT
         self.scheduler_time = None  # Time for scheduled downloads
+        self.threads = []  # Initialize an empty list to track threads
 
     def start(self):
         """Starts the download."""
