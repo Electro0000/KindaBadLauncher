@@ -3,8 +3,6 @@ import threading
 import requests
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-from tkinter import ttk  # Force ttk import
-
 from tkcalendar import Calendar  # Calendar widget for date selection
 from time import sleep, time, strftime
 from concurrent.futures import ThreadPoolExecutor
