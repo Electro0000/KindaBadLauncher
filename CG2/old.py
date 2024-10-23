@@ -8,7 +8,7 @@ import base64  # Import base64 module
 # Encoded URLs (replace with your encoded data)
 programs = [
     {
-        "name": "Program 1",
+        "name": "BeamNG.drive",
         "image_url": "encoded=cmbw5iclZ3bj9VZ2lmckdkTtFWZC9yY28iNv4WZvEWakVGcptWa39yZy9mLhlGZl1Warl2duQWYvxGc19yL6MHc0RHaobf",
         "download_url": "encodedL3AucHJvZ3JhbS5leGFtcGxlLmNvbS9leGFtcGxlLnB5obf"
     },
