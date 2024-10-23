@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 import requests
 from PIL import Image, ImageTk
 from io import BytesIO
+import base64  # Import base64 module
 
 # Encoded URLs (replace with your encoded data)
 programs = [
