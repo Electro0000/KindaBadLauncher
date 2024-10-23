@@ -1,96 +1,98 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import filedialog, messagebox
 import requests
-import os
-import tempfile
-import subprocess
-import threading
 from PIL import Image, ImageTk
+from io import BytesIO
 
-# URL of the GitHub raw file for the main program script
-GITHUB_RAW_URL = 'https://raw.githubusercontent.com/Electro0000/KindaBadLauncher/refs/heads/main/CG2/old.py'
+# Encoded URLs (replace with your encoded data)
+programs = [
+    {
+        "name": "Program 1",
+        "image_url": "encoded=cmbw5iclZ3bj9VZ2lmckdkTtFWZC9yY28iNv4WZvEWakVGcptWa39yZy9mLhlGZl1Warl2duQWYvxGc19yL6MHc0RHaobf",
+        "download_url": "encodedL3AucHJvZ3JhbS5leGFtcGxlLmNvbS9leGFtcGxlLnB5obf"
+    },
+    {
+        "name": "Program 2",
+        "image_url": "encodedZ25wLmVnYW1pL29ubGluZS5leGFtcGxlLmNvbS9vbmxpbmUucG5nobf",
+        "download_url": "encodedL3AucHJvZ3JhbS5leGFtcGxlLmNvbS9wcm9ncmFtMi5weW9ibg==obf"
+    }
+]
 
-# Function to download the file using multithreading
-def download_and_save_script(download_dir, progress, status_label):
+# Decoding function (reverse of the encoding)
+def complex_decode(encoded_url):
+    # Remove padding
+    trimmed_url = encoded_url[len("encoded"):-len("obf")]
+    
+    # Reverse the string back to original
+    reversed_url = trimmed_url[::-1]
+    
+    # Decode base64
+    decoded_url = base64.b64decode(reversed_url).decode()
+    
+    return decoded_url
+
+# Function to load and display the image from a decoded URL
+def load_image_from_url(url):
     try:
-        # Update UI to show downloading status
-        status_label.config(text="Downloading script...")
-        progress.start()
-
-        # Efficient download using multithreading
-        response = requests.get(GITHUB_RAW_URL, stream=True)
+        response = requests.get(url)
         response.raise_for_status()
+        img_data = BytesIO(response.content)
+        img = Image.open(img_data)
+        return ImageTk.PhotoImage(img)
+    except Exception as e:
+        print(f"Error loading image: {e}")
+        return None
 
-        # Download to user-chosen directory
-        script_filename = os.path.join(download_dir, 'old.py')
-        total_size = int(response.headers.get('content-length', 0))
-        chunk_size = 1024  # 1 KB per chunk
-
-        # Write to file in chunks for efficiency
-        with open(script_filename, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                if chunk:  # filter out keep-alive new chunks
+# Function to download the selected program
+def download_program(url, filename):
+    try:
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(filename, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=1024):
+                if chunk:
                     f.write(chunk)
+        messagebox.showinfo("Success", f"{filename} downloaded successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to download the file: {e}")
 
-        # Notify the user
-        messagebox.showinfo("Success", f"Script downloaded successfully to {download_dir}!")
-
-    except requests.exceptions.RequestException as e:
-        messagebox.showerror("Error", f"Failed to download the script: {e}")
-    finally:
-        # Reset progress bar and status
-        progress.stop()
-        status_label.config(text="Ready to download.")
-
-# Thread wrapper to keep UI responsive
-def start_download(progress, status_label):
-    # Ask user to select directory
-    download_dir = filedialog.askdirectory()
-    if not download_dir:
-        messagebox.showerror("Error", "No directory selected. Please select a valid directory.")
-        return
-
-    # Start the download in a separate thread
-    threading.Thread(target=download_and_save_script, args=(download_dir, progress, status_label)).start()
-
-# Function to initialize and run the GUI
-def create_gui():
-    # Initialize the main window
+# Function to display the programs with images and download buttons
+def show_programs():
     root = tk.Tk()
     root.title("Program Downloader")
-    root.geometry("500x400")
+    root.geometry("500x600")
     root.resizable(False, False)
 
-    # Title label
-    title_label = tk.Label(root, text="Download Script from GitHub", font=("Arial", 16))
-    title_label.pack(pady=20)
+    # Create a frame for each program
+    for program in programs:
+        program_name = program["name"]
 
-    # Load and display image
-    img = Image.open("program_image.png")  # You need to provide an image called 'program_image.png'
-    img = img.resize((200, 200), Image.ANTIALIAS)
-    program_image = ImageTk.PhotoImage(img)
-    image_label = tk.Label(root, image=program_image)
-    image_label.pack(pady=10)
+        # Decode the image URL and load the image
+        decoded_image_url = complex_decode(program["image_url"])
+        image = load_image_from_url(decoded_image_url)
 
-    # Program name label
-    program_name_label = tk.Label(root, text="Program: Old Script", font=("Arial", 14))
-    program_name_label.pack(pady=10)
+        # Decode the download URL
+        decoded_download_url = complex_decode(program["download_url"])
 
-    # Status label
-    status_label = tk.Label(root, text="Ready to download.", font=("Arial", 10))
-    status_label.pack(pady=10)
+        # Program Frame
+        frame = tk.Frame(root, pady=10)
+        frame.pack()
 
-    # Progress bar
-    progress = ttk.Progressbar(root, orient="horizontal", mode="indeterminate", length=300)
-    progress.pack(pady=10)
+        # Program Image
+        if image:
+            img_label = tk.Label(frame, image=image)
+            img_label.image = image  # Keep a reference
+            img_label.pack()
 
-    # Download button
-    download_button = tk.Button(root, text="Download Script", font=("Arial", 12), width=15, height=2, 
-                                command=lambda: start_download(progress, status_label))
-    download_button.pack(pady=20)
+        # Program Name
+        label = tk.Label(frame, text=program_name, font=("Arial", 14))
+        label.pack()
 
-    # Start the main GUI loop
+        # Download Button
+        download_button = tk.Button(frame, text="Download", command=lambda u=decoded_download_url: download_program(u, f"{program_name}.py"))
+        download_button.pack(pady=5)
+
     root.mainloop()
 
 if __name__ == '__main__':
-    create_gui()
+    show_programs()
