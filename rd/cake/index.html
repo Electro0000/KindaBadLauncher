@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocolate Cake Delight</title>
+    <style>
+        /* Reset default browser styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Body Styling */
+        body {
+            background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+        }
+
+        /* Main Container */
+        .container {
+            display: flex;
+            flex-direction: row;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 1200px;
+            width: 100%;
+            gap: 40px;
+        }
+
+        /* Left Section: Cake and Timer */
+        .left-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .cake-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+        }
+
+        .cake {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2; /* Ensure the central cake is on top */
+            transition: transform 0.5s, filter 0.5s, box-shadow 0.5s;
+            /* Initialize CSS Variables */
+            --rotate: 0deg;
+            --scale: 1;
+            --skew-x: 0deg;
+            --skew-y: 0deg;
+            --translate-x: 0px;
+            --translate-y: 0px;
+            transform: rotate(var(--rotate)) scale(var(--scale)) skew(var(--skew-x), var(--skew-y)) translate(var(--translate-x), var(--translate-y));
+        }
+
+        .clone {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: fadeExpand 5s forwards;
+            pointer-events: none;
+            z-index: 1; /* Clones are behind the central cake */
+        }
+
+        /* Timer and Coins Display */
+        .timer-coins {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .timer-coins div {
+            font-size: 1.4em;
+        }
+
+        /* Right Section: Shop */
+        .right-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .shop {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .shop h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2em;
+            border-bottom: 2px solid #FFFFFF;
+            padding-bottom: 10px;
+        }
+
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            transition: background 0.3s, transform 0.3s;
+        }
+
+        .shop-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+        }
+
+        .shop-item div {
+            max-width: 70%;
+        }
+
+        .shop-item button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            background-color: #FF5722;
+            color: white;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .shop-item button.toggle-button {
+            background-color: #4CAF50; /* Green for enabled */
+        }
+
+        .shop-item button:disabled {
+            background-color: #888;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        .shop-item button:hover:not(:disabled) {
+            background-color: #E64A19;
+            transform: scale(1.05);
+        }
+
+        /* Toggle Button Styling */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-container input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Animation for cloning, fading, and expanding */
+        @keyframes fadeExpand {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1000px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+                width: 90%;
+            }
+
+            .shop {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .cake-container {
+                width: 250px;
+                height: 250px;
+            }
+
+            .timer-coins {
+                font-size: 1.2em;
+                padding: 15px 25px;
+                gap: 10px;
+                max-width: 300px;
+            }
+
+            .shop {
+                padding: 20px;
+            }
+
+            .shop-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .shop-item div {
+                max-width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .cake-container {
+                width: 200px;
+                height: 200px;
+            }
+
+            .timer-coins {
+                font-size: 1em;
+                padding: 10px 20px;
+                gap: 8px;
+                max-width: 250px;
+            }
+
+            .shop-item button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .cake-container {
+                width: 150px;
+                height: 150px;
+            }
+
+            .timer-coins {
+                font-size: 0.9em;
+                padding: 8px 15px;
+                gap: 5px;
+                max-width: 200px;
+            }
+        }
+
+        /* Effect Classes */
+        /* Transform-based Effects using CSS Variables */
+        .glitch {
+            position: relative;
+            animation: glitchAnimation 1s infinite;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            opacity: 0.8;
+            pointer-events: none;
+            mix-blend-mode: screen;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 red;
+            clip: rect(0, 900px, 0, 0);
+            animation: glitchBefore 2s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: 2px 0 blue;
+            clip: rect(0, 900px, 0, 0);
+            animation: glitchAfter 3s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitchAnimation {
+            0% {
+                transform: none;
+            }
+            20% {
+                transform: translate(-2px, 2px);
+            }
+            40% {
+                transform: translate(2px, -2px);
+            }
+            60% {
+                transform: translate(-2px, 0px);
+            }
+            80% {
+                transform: translate(2px, 2px);
+            }
+            100% {
+                transform: none;
+            }
+        }
+
+        @keyframes glitchBefore {
+            0% {
+                clip: rect(42px, 9999px, 44px, 0);
+                transform: skew(0.39deg);
+            }
+            5% {
+                clip: rect(85px, 9999px, 85px, 0);
+                transform: skew(0.43deg);
+            }
+            /* Add more keyframes as needed */
+            100% {
+                clip: rect(42px, 9999px, 44px, 0);
+                transform: skew(0.39deg);
+            }
+        }
+
+        @keyframes glitchAfter {
+            0% {
+                clip: rect(12px, 9999px, 15px, 0);
+                transform: skew(0.43deg);
+            }
+            5% {
+                clip: rect(85px, 9999px, 90px, 0);
+                transform: skew(0.41deg);
+            }
+            /* Add more keyframes as needed */
+            100% {
+                clip: rect(12px, 9999px, 15px, 0);
+                transform: skew(0.43deg);
+            }
+        }
+
+        .rotate-effect {
+            animation: rotateAnimation 4s linear infinite, growFadeOut 4s linear infinite;
+        }
+
+        @keyframes rotateAnimation {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes growFadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        .grow {
+            animation: growAnimation 2s infinite alternate;
+        }
+
+        @keyframes growAnimation {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.2);
+            }
+        }
+
+        .fade-out {
+            animation: fadeOutAnimation 2s infinite alternate;
+        }
+
+        @keyframes fadeOutAnimation {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .pulse {
+            animation: pulseAnimation 2s infinite;
+        }
+
+        @keyframes pulseAnimation {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Additional Effects */
+        .color-shift {
+            animation: colorShift 4s infinite alternate;
+        }
+
+        @keyframes colorShift {
+            from {
+                filter: hue-rotate(0deg);
+            }
+            to {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .infinite-spectrum {
+            animation: hueRotate 6s infinite linear;
+        }
+
+        @keyframes hueRotate {
+            from {
+                filter: hue-rotate(0deg);
+            }
+            to {
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        .crystal-effect {
+            /* Example of a crystalline effect using multiple box-shadows */
+            box-shadow: 
+                0 0 10px rgba(255, 255, 255, 0.5),
+                0 0 20px rgba(255, 255, 255, 0.3),
+                0 0 30px rgba(255, 255, 255, 0.2);
+            animation: crystalShine 3s infinite alternate;
+        }
+
+        @keyframes crystalShine {
+            from {
+                box-shadow: 
+                    0 0 10px rgba(255, 255, 255, 0.5),
+                    0 0 20px rgba(255, 255, 255, 0.3),
+                    0 0 30px rgba(255, 255, 255, 0.2);
+            }
+            to {
+                box-shadow: 
+                    0 0 20px rgba(255, 255, 255, 0.7),
+                    0 0 30px rgba(255, 255, 255, 0.5),
+                    0 0 40px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        .kaleidoscope-effect {
+            /* Simplistic kaleidoscope effect using rotation and scaling */
+            animation: kaleidoscopeRotate 5s infinite linear;
+        }
+
+        @keyframes kaleidoscopeRotate {
+            from {
+                transform: rotate(0deg) scale(1);
+            }
+            to {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        .particle-explosion {
+            /* Placeholder: Particle explosion requires JavaScript for actual implementation */
+            /* Here, we can simulate with CSS animations */
+            animation: particleExplosionAnimation 2s infinite;
+        }
+
+        @keyframes particleExplosionAnimation {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(2);
+            }
+        }
+
+        .ripple-effect::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            animation: ripple 2s infinite;
+        }
+
+        @keyframes ripple {
+            from {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(3);
+                opacity: 0;
+            }
+        }
+
+        .fade-in-effect {
+            animation: fadeInEffectAnimation 3s infinite alternate;
+        }
+
+        @keyframes fadeInEffectAnimation {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .shadow-dance {
+            animation: shadowDanceAnimation 3s infinite alternate;
+        }
+
+        @keyframes shadowDanceAnimation {
+            from {
+                box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            }
+            to {
+                box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            }
+        }
+
+        /* Clone Animation */
+        @keyframes cloneAnimation {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Section: Cake and Timer/Coins -->
+        <div class="left-section">
+            <div class="cake-container">
+                <!-- Chocolate Cake Image -->
+                <img src="https://static.vecteezy.com/system/resources/previews/009/887/171/non_2x/chocolate-cake-free-png.png" alt="Chocolate Cake" class="cake" id="cake">
+            </div>
+
+            <!-- Timer and Coins Display -->
+            <div class="timer-coins">
+                <div>Time Viewed: <span id="time">00:00:00</span></div>
+                <div>Coins: <span id="coins">0</span></div>
+            </div>
+        </div>
+
+        <!-- Right Section: Shop -->
+        <div class="right-section">
+            <div class="shop">
+                <h2>Shop</h2>
+                <!-- Shop Items -->
+                <!-- Loop through the ranked effects and display them -->
+                <!-- For demonstration, effects are listed manually -->
+
+                <div class="shop-item">
+                    <div>
+                        <strong>Glitch Effect</strong><br>
+                        Introduces random glitches and pixelations for a digital error look.
+                    </div>
+                    <div>
+                        Price: 10,000,000 Coins
+                        <button onclick="buyEffect('glitch')" id="buy-glitch">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Particle Explosion</strong><br>
+                        Simulates an explosion of particles emanating from the cake image.
+                    </div>
+                    <div>
+                        Price: 8,000,000 Coins
+                        <button onclick="buyEffect('particle-explosion')" id="buy-particle-explosion">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Color Shift</strong><br>
+                        Continuously shifts the colors of the cake image for a vibrant effect.
+                    </div>
+                    <div>
+                        Price: 6,000,000 Coins
+                        <button onclick="buyEffect('color-shift')" id="buy-color-shift">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Crystal Effect</strong><br>
+                        Gives the cake a crystalline, faceted appearance resembling a gemstone.
+                    </div>
+                    <div>
+                        Price: 5,000,000 Coins
+                        <button onclick="buyEffect('crystal-effect')" id="buy-crystal-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Kaleidoscope Effect</strong><br>
+                        Applies a kaleidoscopic filter, splitting the image into symmetrical patterns.
+                    </div>
+                    <div>
+                        Price: 4,000,000 Coins
+                        <button onclick="buyEffect('kaleidoscope-effect')" id="buy-kaleidoscope-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Neon Glow</strong><br>
+                        Adds a vibrant, neon-colored glow around the cake.
+                    </div>
+                    <div>
+                        Price: 3,500,000 Coins
+                        <button onclick="buyEffect('neon-glow')" id="buy-neon-glow">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Dynamic Lighting</strong><br>
+                        Simulates dynamic lighting changes with moving light sources.
+                    </div>
+                    <div>
+                        Price: 3,000,000 Coins
+                        <button onclick="buyEffect('dynamic-lighting')" id="buy-dynamic-lighting">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>3D Tilt</strong><br>
+                        Gives the cake a 3D parallax tilt effect responding to mouse movement.
+                    </div>
+                    <div>
+                        Price: 2,500,000 Coins
+                        <button onclick="buyEffect('3d-tilt')" id="buy-3d-tilt">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Wave Distortion</strong><br>
+                        Applies a wavy distortion to the cake image for a surreal effect.
+                    </div>
+                    <div>
+                        Price: 2,000,000 Coins
+                        <button onclick="buyEffect('wave-distortion')" id="buy-wave-distortion">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Mirror Split</strong><br>
+                        Splits the cake image into multiple mirrored segments for symmetry.
+                    </div>
+                    <div>
+                        Price: 1,800,000 Coins
+                        <button onclick="buyEffect('mirror-split')" id="buy-mirror-split">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Ripple Effect</strong><br>
+                        Creates ripples emanating from the center of the cake.
+                    </div>
+                    <div>
+                        Price: 1,600,000 Coins
+                        <button onclick="buyEffect('ripple-effect')" id="buy-ripple-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Twirl Effect</strong><br>
+                        Twirls the cake image in a spiral motion for a mesmerizing effect.
+                    </div>
+                    <div>
+                        Price: 1,400,000 Coins
+                        <button onclick="buyEffect('twirl-effect')" id="buy-twirl-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Sparkle Effect</strong><br>
+                        Adds sparkling particles around the cake image, making it shimmer.
+                    </div>
+                    <div>
+                        Price: 1,200,000 Coins
+                        <button onclick="buyEffect('sparkle-effect')" id="buy-sparkle-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Emboss Effect</strong><br>
+                        Adds a raised, embossed appearance to the cake image.
+                    </div>
+                    <div>
+                        Price: 1,000,000 Coins
+                        <button onclick="buyEffect('emboss-effect')" id="buy-emboss-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Metallic Shine</strong><br>
+                        Gives the cake a metallic sheen with reflective highlights.
+                    </div>
+                    <div>
+                        Price: 900,000 Coins
+                        <button onclick="buyEffect('metallic-shine')" id="buy-metallic-shine">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Shadow Dance</strong><br>
+                        Adds moving shadows that change position and intensity over time.
+                    </div>
+                    <div>
+                        Price: 800,000 Coins
+                        <button onclick="buyEffect('shadow-dance')" id="buy-shadow-dance">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Skew Effect</strong><br>
+                        Skews the cake image diagonally for an angular appearance.
+                    </div>
+                    <div>
+                        Price: 700,000 Coins
+                        <button onclick="buyEffect('skew-effect')" id="buy-skew-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Shake Effect</strong><br>
+                        Shakes the cake image rapidly for a dynamic look.
+                    </div>
+                    <div>
+                        Price: 600,000 Coins
+                        <button onclick="buyEffect('shake-effect')" id="buy-shake-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Zoom In</strong><br>
+                        Gradually zooms into the cake image, focusing closer over time.
+                    </div>
+                    <div>
+                        Price: 500,000 Coins
+                        <button onclick="buyEffect('zoom-in')" id="buy-zoom-in">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Zoom Out</strong><br>
+                        Gradually zooms out from the cake image for a wider perspective.
+                    </div>
+                    <div>
+                        Price: 400,000 Coins
+                        <button onclick="buyEffect('zoom-out')" id="buy-zoom-out">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Grayscale Filter</strong><br>
+                        Turns the cake image to grayscale.
+                    </div>
+                    <div>
+                        Price: 300,000 Coins
+                        <button onclick="buyEffect('grayscale-filter')" id="buy-grayscale-filter">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Glow Effect</strong><br>
+                        Adds a golden glow around the cake.
+                    </div>
+                    <div>
+                        Price: 200,000 Coins
+                        <button onclick="buyEffect('glow-effect')" id="buy-glow-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Shadow Effect</strong><br>
+                        Adds a dark shadow around the cake image.
+                    </div>
+                    <div>
+                        Price: 100,000 Coins
+                        <button onclick="buyEffect('shadow-effect')" id="buy-shadow-effect">Buy</button>
+                    </div>
+                </div>
+                <!-- Fixed Rotate Effect -->
+                <div class="shop-item">
+                    <div>
+                        <strong>Rotate Effect</strong><br>
+                        Makes the cake rotate continuously while also growing and fading out.
+                    </div>
+                    <div>
+                        Price: 50,000 Coins
+                        <button onclick="buyEffect('rotate-effect')" id="buy-rotate-effect">Buy</button>
+                    </div>
+                </div>
+                <!-- Separate Grow and Fade-Out Effects -->
+                <div class="shop-item">
+                    <div>
+                        <strong>Grow Effect</strong><br>
+                        Enlarges the cake image.
+                    </div>
+                    <div>
+                        Price: 25,000 Coins
+                        <button onclick="buyEffect('grow-effect')" id="buy-grow-effect">Buy</button>
+                    </div>
+                </div>
+                <div class="shop-item">
+                    <div>
+                        <strong>Fade-Out Effect</strong><br>
+                        Gradually fades out the cake image.
+                    </div>
+                    <div>
+                        Price: 10,000 Coins
+                        <button onclick="buyEffect('fade-out-effect')" id="buy-fade-out-effect">Buy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Define effects with their properties
+            const effectsData = {
+                'glitch': { price: 10000000, className: 'glitch' },
+                'particle-explosion': { price: 8000000, className: 'particle-explosion' },
+                'color-shift': { price: 6000000, className: 'color-shift' },
+                'crystal-effect': { price: 5000000, className: 'crystal-effect' },
+                'kaleidoscope-effect': { price: 4000000, className: 'kaleidoscope-effect' },
+                'neon-glow': { price: 3500000, className: 'neon-glow' },
+                'dynamic-lighting': { price: 3000000, className: 'dynamic-lighting' },
+                '3d-tilt': { price: 2500000, className: '3d-tilt' },
+                'wave-distortion': { price: 2000000, className: 'wave-distortion' },
+                'mirror-split': { price: 1800000, className: 'mirror-split' },
+                'ripple-effect': { price: 1600000, className: 'ripple-effect' },
+                'twirl-effect': { price: 1400000, className: 'twirl-effect' },
+                'sparkle-effect': { price: 1200000, className: 'sparkle-effect' },
+                'emboss-effect': { price: 1000000, className: 'emboss-effect' },
+                'metallic-shine': { price: 900000, className: 'metallic-shine' },
+                'shadow-dance': { price: 800000, className: 'shadow-dance' },
+                'skew-effect': { price: 700000, className: 'skew-effect' },
+                'shake-effect': { price: 600000, className: 'shake-effect' },
+                'zoom-in': { price: 500000, className: 'zoom-in' },
+                'zoom-out': { price: 400000, className: 'zoom-out' },
+                'grayscale-filter': { price: 300000, className: 'grayscale-filter' },
+                'glow-effect': { price: 200000, className: 'glow-effect' },
+                'shadow-effect': { price: 100000, className: 'shadow-effect' },
+                'rotate-effect': { price: 50000, className: 'rotate-effect' },
+                'grow-effect': { price: 25000, className: 'grow' },
+                'fade-out-effect': { price: 10000, className: 'fade-out' }
+                // Add more effects here if needed
+            };
+
+            // Initialize coins and effects from localStorage
+            let coins = parseInt(localStorage.getItem('coins')) || 0;
+            let effects = JSON.parse(localStorage.getItem('effects')) || {};
+
+            // Update coins display
+            const coinsDisplay = document.getElementById('coins');
+            const timeDisplay = document.getElementById('time');
+            const cake = document.getElementById('cake');
+
+            function updateCoinsDisplay() {
+                coinsDisplay.textContent = coins.toLocaleString();
+            }
+
+            // Update time display
+            function updateTimeDisplay(totalSeconds) {
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                timeDisplay.textContent = `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+            }
+
+            function pad(num) {
+                return num.toString().padStart(2, '0');
+            }
+
+            // Increment coins every second
+            let totalTime = parseInt(localStorage.getItem('totalTime')) || 0;
+            updateTimeDisplay(totalTime);
+            updateCoinsDisplay();
+
+            setInterval(() => {
+                totalTime++;
+                coins++;
+                updateTimeDisplay(totalTime);
+                updateCoinsDisplay();
+                localStorage.setItem('totalTime', totalTime);
+                localStorage.setItem('coins', coins);
+            }, 1000);
+
+            // Apply purchased effects
+            function applyEffects() {
+                for (const effect in effects) {
+                    if (effects[effect] && effectsData[effect]) {
+                        cake.classList.add(effectsData[effect].className);
+                    }
+                }
+            }
+
+            applyEffects();
+
+            // Buy and Toggle effect function
+            function buyEffect(effectName) {
+                if (effectsData[effectName]) {
+                    const { price, className } = effectsData[effectName];
+                    if (coins >= price) {
+                        if (!effects[effectName]) {
+                            // Purchase the effect
+                            coins -= price;
+                            effects[effectName] = false; // Initially off
+                            localStorage.setItem('coins', coins);
+                            localStorage.setItem('effects', JSON.stringify(effects));
+                            updateCoinsDisplay();
+                            // Update button to toggle
+                            const button = document.getElementById(`buy-${effectName}`);
+                            if (button) {
+                                button.innerHTML = `
+                                    <label class="toggle-container">
+                                        <input type="checkbox" onclick="toggleEffect('${effectName}')">
+                                        <span>${'Enable'}</span>
+                                    </label>
+                                `;
+                            }
+                        }
+                    } else {
+                        alert("Not enough coins to buy this effect!");
+                    }
+                }
+            }
+
+            // Toggle effect on/off
+            function toggleEffect(effectName) {
+                if (effectsData[effectName]) {
+                    const { className } = effectsData[effectName];
+                    const isActive = effects[effectName];
+                    if (isActive) {
+                        // Deactivate effect
+                        cake.classList.remove(className);
+                        effects[effectName] = false;
+                    } else {
+                        // Activate effect
+                        cake.classList.add(className);
+                        effects[effectName] = true;
+                    }
+                    localStorage.setItem('effects', JSON.stringify(effects));
+                }
+            }
+
+            // Disable buy buttons for already purchased effects
+            function disablePurchasedButtons() {
+                for (const effect in effects) {
+                    if (effects[effect] && effectsData[effect]) {
+                        const button = document.getElementById(`buy-${effect}`);
+                        if (button) {
+                            button.innerHTML = `
+                                <label class="toggle-container">
+                                    <input type="checkbox" ${effects[effect] ? 'checked' : ''} onclick="toggleEffect('${effect}')">
+                                    <span>${effects[effect] ? 'Disable' : 'Enable'}</span>
+                                </label>
+                            `;
+                            if (effects[effect]) {
+                                cake.classList.add(effectsData[effect].className);
+                            }
+                        }
+                    }
+                }
+            }
+
+            disablePurchasedButtons();
+
+            // Clone Animation
+            const imageContainer = document.querySelector('.cake-container');
+            const cakeElement = document.querySelector('.cake');
+
+            function createClone() {
+                const clone = cakeElement.cloneNode(true);
+                clone.classList.add('clone');
+                imageContainer.appendChild(clone);
+
+                // Remove the clone after the animation completes to prevent DOM clutter
+                clone.addEventListener('animationend', () => {
+                    clone.remove();
+                });
+            }
+
+            // Create a clone every second
+            setInterval(createClone, 1000);
+        </script>
+    </body>
+</html>
