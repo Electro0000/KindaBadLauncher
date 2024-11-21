@@ -364,7 +364,7 @@
         }
 
         .rotate-effect {
-            animation: rotateAnimation 4s linear infinite, growFadeOut 4s linear infinite;
+            animation: rotateAnimation 4s linear infinite;
         }
 
         @keyframes rotateAnimation {
@@ -373,21 +373,6 @@
             }
             to {
                 transform: rotate(360deg);
-            }
-        }
-
-        @keyframes growFadeOut {
-            0% {
-                opacity: 1;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 0.5;
-                transform: scale(1.5);
-            }
-            100% {
-                opacity: 0;
-                transform: scale(2);
             }
         }
 
@@ -505,11 +490,11 @@
         }
 
         @keyframes particleExplosionAnimation {
-            0% {
+            from {
                 opacity: 1;
                 transform: scale(1);
             }
-            100% {
+            to {
                 opacity: 0;
                 transform: scale(2);
             }
@@ -836,7 +821,7 @@
                 <div class="shop-item">
                     <div>
                         <strong>Rotate Effect</strong><br>
-                        Makes the cake rotate continuously while also growing and fading out.
+                        Makes the cake rotate continuously.
                     </div>
                     <div>
                         Price: 50,000 Coins
@@ -954,20 +939,21 @@
                 if (effectsData[effectName]) {
                     const { price, className } = effectsData[effectName];
                     if (coins >= price) {
-                        if (!effects[effectName]) {
+                        if (!(effectName in effects)) {
                             // Purchase the effect
                             coins -= price;
                             effects[effectName] = false; // Initially off
                             localStorage.setItem('coins', coins);
                             localStorage.setItem('effects', JSON.stringify(effects));
                             updateCoinsDisplay();
-                            // Update button to toggle
+
+                            // Replace Buy button with Toggle
                             const button = document.getElementById(`buy-${effectName}`);
                             if (button) {
                                 button.innerHTML = `
                                     <label class="toggle-container">
                                         <input type="checkbox" onclick="toggleEffect('${effectName}')">
-                                        <span>${'Enable'}</span>
+                                        <span>Enable</span>
                                     </label>
                                 `;
                             }
@@ -987,16 +973,29 @@
                         // Deactivate effect
                         cake.classList.remove(className);
                         effects[effectName] = false;
+                        updateToggleButton(effectName, false);
                     } else {
                         // Activate effect
                         cake.classList.add(className);
                         effects[effectName] = true;
+                        updateToggleButton(effectName, true);
                     }
                     localStorage.setItem('effects', JSON.stringify(effects));
                 }
             }
 
-            // Disable buy buttons for already purchased effects
+            // Update toggle button label based on state
+            function updateToggleButton(effectName, isActive) {
+                const button = document.getElementById(`buy-${effectName}`);
+                if (button) {
+                    const span = button.querySelector('span');
+                    if (span) {
+                        span.textContent = isActive ? 'Disable' : 'Enable';
+                    }
+                }
+            }
+
+            // Disable buy buttons for already purchased effects and set their toggle states
             function disablePurchasedButtons() {
                 for (const effect in effects) {
                     if (effects[effect] && effectsData[effect]) {
@@ -1008,9 +1007,6 @@
                                     <span>${effects[effect] ? 'Disable' : 'Enable'}</span>
                                 </label>
                             `;
-                            if (effects[effect]) {
-                                cake.classList.add(effectsData[effect].className);
-                            }
                         }
                     }
                 }
@@ -1036,5 +1032,5 @@
             // Create a clone every second
             setInterval(createClone, 1000);
         </script>
-    </body>
+</body>
 </html>
