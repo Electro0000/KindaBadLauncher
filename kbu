@@ -1,0 +1,493 @@
+#!/bin/bash
+# kbu - KindaBadUtils: An advanced multi-feature Arch Linux maintenance tool
+# with a terminal GUI (using whiptail), self-update, auto-update scheduling,
+# and many extra maintenance & system info features.
+#
+# Usage:
+#   ./kbu              Launch the interactive GUI.
+#   ./kbu install      Install kbu into your bin directory and set up systemd.
+#   ./kbu --self-update  Run the self-update process (used by systemd).
+
+###############################################################################
+# DEFAULT CONFIGURATION VALUES
+###############################################################################
+DEFAULT_AUTO_CONFIRM=1
+DEFAULT_AUR_UPDATE=0
+DEFAULT_QUIET=0
+DEFAULT_UPDATE_TIME="02:00"
+DEFAULT_KBU_UPDATE_URL="https://example.com/kbu-latest.sh"  # Change to your URL
+DEFAULT_AUTO_SELF_UPDATE=0
+DEFAULT_AUTO_SELF_UPDATE_TIME="03:00"
+
+# Global config variables (may be overridden by config file)
+AUTO_CONFIRM=$DEFAULT_AUTO_CONFIRM
+AUR_UPDATE=$DEFAULT_AUR_UPDATE
+QUIET=$DEFAULT_QUIET
+UPDATE_TIME=$DEFAULT_UPDATE_TIME
+KBU_UPDATE_URL=$DEFAULT_KBU_UPDATE_URL
+AUTO_SELF_UPDATE=$DEFAULT_AUTO_SELF_UPDATE
+AUTO_SELF_UPDATE_TIME=$DEFAULT_AUTO_SELF_UPDATE_TIME
+
+###############################################################################
+# INSTALLATION FUNCTIONALITY
+###############################################################################
+install_kbu() {
+  if [[ $EUID -eq 0 ]]; then
+    INSTALL_DIR="/usr/local/bin"
+    SYSTEMD_DIR="/etc/systemd/system"
+    CONFIG_FILE="/etc/kbu.conf"
+  else
+    INSTALL_DIR="$HOME/.local/bin"
+    mkdir -p "$INSTALL_DIR"
+    SYSTEMD_DIR="$HOME/.config/systemd/user"
+    mkdir -p "$SYSTEMD_DIR"
+    CONFIG_FILE="$HOME/.kbu.conf"
+  fi
+
+  echo "Installing kbu to $INSTALL_DIR..."
+  cp "$0" "$INSTALL_DIR/kbu"
+  chmod +x "$INSTALL_DIR/kbu"
+
+  if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Creating default configuration file at $CONFIG_FILE..."
+    cat <<EOCONF > "$CONFIG_FILE"
+AUTO_CONFIRM=$DEFAULT_AUTO_CONFIRM
+AUR_UPDATE=$DEFAULT_AUR_UPDATE
+QUIET=$DEFAULT_QUIET
+UPDATE_TIME=$DEFAULT_UPDATE_TIME
+KBU_UPDATE_URL=$DEFAULT_KBU_UPDATE_URL
+AUTO_SELF_UPDATE=$DEFAULT_AUTO_SELF_UPDATE
+AUTO_SELF_UPDATE_TIME=$DEFAULT_AUTO_SELF_UPDATE_TIME
+EOCONF
+  else
+    echo "Configuration file already exists at $CONFIG_FILE"
+  fi
+
+  echo "Setting up systemd service and timer for package updates..."
+
+  # Main service unit for package updates.
+  SERVICE_FILE="$SYSTEMD_DIR/kbu.service"
+  cat <<EOSERVICE > "$SERVICE_FILE"
+[Unit]
+Description=KindaBadUtils Auto Update Service
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=${INSTALL_DIR}/kbu --no-confirm --aur
+EOSERVICE
+
+  # Timer unit for package updates.
+  TIMER_FILE="$SYSTEMD_DIR/kbu.timer"
+  cat <<EOTIMER > "$TIMER_FILE"
+[Unit]
+Description=Run KindaBadUtils Daily Package Update
+
+[Timer]
+OnCalendar=*-*-* ${DEFAULT_UPDATE_TIME}:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOTIMER
+
+  if [[ $EUID -eq 0 ]]; then
+    systemctl daemon-reload
+    systemctl enable --now kbu.timer
+  else
+    systemctl --user daemon-reload
+    systemctl --user enable --now kbu.timer
+  fi
+
+  # Set up self-update timer if enabled.
+  setup_auto_self_update "$SYSTEMD_DIR" "$INSTALL_DIR"
+
+  echo "Installation complete! You can now run 'kbu' to launch the GUI."
+  exit 0
+}
+
+###############################################################################
+# SET UP AUTO SELF UPDATE (SYSTEMD UNITS)
+###############################################################################
+setup_auto_self_update() {
+  local sysd_dir="$1"
+  local install_dir="$2"
+  if [ "$AUTO_SELF_UPDATE" -eq 1 ]; then
+    SELF_SERVICE_FILE="$sysd_dir/kbu-selfupdate.service"
+    SELF_TIMER_FILE="$sysd_dir/kbu-selfupdate.timer"
+    cat <<EOSERVICE > "$SELF_SERVICE_FILE"
+[Unit]
+Description=KindaBadUtils Self Update Service
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=${install_dir}/kbu --self-update
+EOSERVICE
+
+    cat <<EOTIMER > "$SELF_TIMER_FILE"
+[Unit]
+Description=Run KindaBadUtils Self Update Daily
+
+[Timer]
+OnCalendar=*-*-* ${AUTO_SELF_UPDATE_TIME}:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOTIMER
+
+    if [[ $EUID -eq 0 ]]; then
+      systemctl daemon-reload
+      systemctl enable --now kbu-selfupdate.timer
+    else
+      systemctl --user daemon-reload
+      systemctl --user enable --now kbu-selfupdate.timer
+    fi
+  else
+    # If auto self update is not enabled, disable any existing self update timer.
+    if [[ $EUID -eq 0 ]]; then
+      systemctl disable --now kbu-selfupdate.timer 2>/dev/null
+      rm -f /etc/systemd/system/kbu-selfupdate.service /etc/systemd/system/kbu-selfupdate.timer
+    else
+      systemctl --user disable --now kbu-selfupdate.timer 2>/dev/null
+      rm -f "$HOME/.config/systemd/user/kbu-selfupdate.service" "$HOME/.config/systemd/user/kbu-selfupdate.timer"
+    fi
+  fi
+}
+
+###############################################################################
+# UTILITY FUNCTIONS
+###############################################################################
+check_whiptail() {
+  if ! command -v whiptail >/dev/null 2>&1; then
+    echo "This script requires 'whiptail'. Install it (e.g. 'sudo pacman -S whiptail') and rerun."
+    exit 1
+  fi
+}
+
+load_config() {
+  CONFIG_FILE="/etc/kbu.conf"
+  [ -f "$HOME/.kbu.conf" ] && CONFIG_FILE="$HOME/.kbu.conf"
+  if [ -f "$CONFIG_FILE" ]; then
+    source "$CONFIG_FILE"
+  else
+    AUTO_CONFIRM=$DEFAULT_AUTO_CONFIRM
+    AUR_UPDATE=$DEFAULT_AUR_UPDATE
+    QUIET=$DEFAULT_QUIET
+    UPDATE_TIME=$DEFAULT_UPDATE_TIME
+    KBU_UPDATE_URL=$DEFAULT_KBU_UPDATE_URL
+    AUTO_SELF_UPDATE=$DEFAULT_AUTO_SELF_UPDATE
+    AUTO_SELF_UPDATE_TIME=$DEFAULT_AUTO_SELF_UPDATE_TIME
+  fi
+
+  if [ "$EUID" -eq 0 ]; then
+      SYSTEMD_TIMER_FILE="/etc/systemd/system/kbu.timer"
+  else
+      SYSTEMD_TIMER_FILE="$HOME/.config/systemd/user/kbu.timer"
+  fi
+}
+
+save_config() {
+  if [ ! -w "$CONFIG_FILE" ]; then
+    CONFIG_FILE="$HOME/.kbu.conf"
+  fi
+  cat <<EOCONF > "$CONFIG_FILE"
+AUTO_CONFIRM=$AUTO_CONFIRM
+AUR_UPDATE=$AUR_UPDATE
+QUIET=$QUIET
+UPDATE_TIME=$UPDATE_TIME
+KBU_UPDATE_URL=$KBU_UPDATE_URL
+AUTO_SELF_UPDATE=$AUTO_SELF_UPDATE
+AUTO_SELF_UPDATE_TIME=$AUTO_SELF_UPDATE_TIME
+EOCONF
+}
+
+###############################################################################
+# UPDATE FUNCTIONS
+###############################################################################
+update_system() {
+  whiptail --title "Update System Packages" --msgbox "Updating official packages with pacman..." 8 50
+  if [ "$AUTO_CONFIRM" -eq 1 ]; then
+    sudo pacman -Syu --noconfirm
+  else
+    sudo pacman -Syu
+  fi
+  whiptail --title "Update Complete" --msgbox "System packages update complete." 8 50
+}
+
+update_aur() {
+  if command -v paru >/dev/null 2>&1; then
+    whiptail --title "Update AUR Packages" --msgbox "Updating AUR packages with paru..." 8 50
+    paru -Syu --noconfirm
+  elif command -v yay >/dev/null 2>&1; then
+    whiptail --title "Update AUR Packages" --msgbox "Updating AUR packages with yay..." 8 50
+    yay -Syu --noconfirm
+  else
+    whiptail --title "AUR Update" --msgbox "No AUR helper found. Skipping AUR updates." 8 50
+  fi
+}
+
+update_both() {
+  update_system
+  update_aur
+}
+
+###############################################################################
+# MAINTENANCE FUNCTIONS
+###############################################################################
+clean_cache() {
+  if whiptail --title "Clean Package Cache" --yesno "Clean the pacman cache? This removes old cached packages." 10 60; then
+    sudo pacman -Sc --noconfirm
+    whiptail --title "Cache Cleaned" --msgbox "Package cache cleaned." 8 50
+  else
+    whiptail --title "Canceled" --msgbox "Cache cleaning canceled." 8 50
+  fi
+}
+
+remove_orphans() {
+  ORPHANS=$(pacman -Qtdq)
+  if [ -n "$ORPHANS" ]; then
+    if whiptail --title "Remove Orphan Packages" --yesno "Orphan packages detected. Remove them?" 10 60; then
+      sudo pacman -Rns $(pacman -Qtdq) --noconfirm
+      whiptail --title "Orphans Removed" --msgbox "Orphan packages removed." 8 50
+    else
+      whiptail --title "Canceled" --msgbox "Orphan removal canceled." 8 50
+    fi
+  else
+    whiptail --title "No Orphans" --msgbox "No orphan packages found." 8 50
+  fi
+}
+
+backup_configs() {
+  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+  if [ "$EUID" -eq 0 ]; then
+    BACKUP_DIR="/var/backups/kbu"
+    mkdir -p "$BACKUP_DIR"
+    tar -czf "$BACKUP_DIR/etc_backup_$TIMESTAMP.tar.gz" /etc
+    whiptail --title "Backup Complete" --msgbox "Configuration files from /etc backed up to $BACKUP_DIR." 10 60
+  else
+    BACKUP_DIR="$HOME/kbu_backups"
+    mkdir -p "$BACKUP_DIR"
+    tar -czf "$BACKUP_DIR/config_backup_$TIMESTAMP.tar.gz" "$HOME/.config"
+    whiptail --title "Backup Complete" --msgbox "Configuration files from ~/.config backed up to $BACKUP_DIR." 10 60
+  fi
+}
+
+update_mirrors() {
+  if command -v reflector >/dev/null 2>&1; then
+    if whiptail --title "Update Mirrors" --yesno "Update the pacman mirror list using reflector?" 10 60; then
+      sudo reflector --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+      whiptail --title "Mirrors Updated" --msgbox "Mirror list updated." 8 50
+    else
+      whiptail --title "Canceled" --msgbox "Mirror update canceled." 8 50
+    fi
+  else
+    whiptail --title "Reflector Not Found" --msgbox "Reflector is not installed. Install it with 'sudo pacman -S reflector'." 8 60
+  fi
+}
+
+list_installed_packages() {
+  TMPFILE=$(mktemp)
+  pacman -Q > "$TMPFILE"
+  whiptail --title "Installed Packages" --textbox "$TMPFILE" 20 70
+  rm -f "$TMPFILE"
+}
+
+###############################################################################
+# SYSTEM INFO FUNCTIONS
+###############################################################################
+show_disk_usage() {
+  USAGE=$(df -h | sed '1d')
+  whiptail --title "Disk Usage" --msgbox "$USAGE" 20 70
+}
+
+show_system_summary() {
+  SUMMARY=$(printf "Kernel: %s\nUptime: %s\n" "$(uname -r)" "$(uptime -p)")
+  whiptail --title "System Summary" --msgbox "$SUMMARY" 10 60
+}
+
+show_memory_usage() {
+  MEM_USAGE=$(free -h)
+  whiptail --title "Memory Usage" --msgbox "$MEM_USAGE" 15 70
+}
+
+show_cpu_load() {
+  CPU_LOAD=$(uptime)
+  whiptail --title "CPU Load" --msgbox "$CPU_LOAD" 10 70
+}
+
+view_log() {
+  LOG_FILE="/var/log/kbu.log"
+  if [ -f "$LOG_FILE" ]; then
+    whiptail --title "Update Log" --textbox "$LOG_FILE" 20 70
+  else
+    whiptail --title "Update Log" --msgbox "No log file found." 10 50
+  fi
+}
+
+###############################################################################
+# SELF-UPDATE FUNCTION
+###############################################################################
+update_script() {
+  if whiptail --title "Self-Update" --yesno "Update kbu to the latest version?" 10 60; then
+    TEMP_FILE=$(mktemp)
+    if command -v curl >/dev/null 2>&1; then
+      curl -L "$KBU_UPDATE_URL" -o "$TEMP_FILE"
+    elif command -v wget >/dev/null 2>&1; then
+      wget -O "$TEMP_FILE" "$KBU_UPDATE_URL"
+    else
+      whiptail --title "Error" --msgbox "Neither curl nor wget is installed." 8 50
+      return
+    fi
+    if [ -s "$TEMP_FILE" ]; then
+      SCRIPT_PATH=$(readlink -f "$0")
+      if [ -w "$SCRIPT_PATH" ]; then
+        cp "$TEMP_FILE" "$SCRIPT_PATH"
+        chmod +x "$SCRIPT_PATH"
+        whiptail --title "Update Successful" --msgbox "kbu has been updated." 8 50
+      else
+        whiptail --title "Permission Error" --msgbox "No write permission to update the script." 10 60
+      fi
+    else
+      whiptail --title "Update Failed" --msgbox "Failed to download the update." 8 50
+    fi
+    rm -f "$TEMP_FILE"
+  fi
+}
+
+###############################################################################
+# SETTINGS MENU FUNCTION
+###############################################################################
+settings_menu() {
+  CONFIG_VALUES=$(whiptail --title "Settings" --form "Edit Settings" 18 70 7 \
+    "Auto-confirm (0/1):"         1 1 "$AUTO_CONFIRM"          1 25 3 0 \
+    "AUR update (0/1):"           2 1 "$AUR_UPDATE"            2 25 3 0 \
+    "Quiet mode (0/1):"           3 1 "$QUIET"                 3 25 3 0 \
+    "Update time (HH:MM):"        4 1 "$UPDATE_TIME"           4 25 3 0 \
+    "Update URL:"                5 1 "$KBU_UPDATE_URL"        5 25 50 0 \
+    "Auto self update (0/1):"     6 1 "$AUTO_SELF_UPDATE"      6 25 3 0 \
+    "Self update time (HH:MM):"   7 1 "$AUTO_SELF_UPDATE_TIME" 7 25 3 0 2>&1 1>/dev/tty)
+  RET=$?
+  if [ $RET -eq 0 ]; then
+    AUTO_CONFIRM=$(echo "$CONFIG_VALUES" | sed -n '1p')
+    AUR_UPDATE=$(echo "$CONFIG_VALUES" | sed -n '2p')
+    QUIET=$(echo "$CONFIG_VALUES" | sed -n '3p')
+    UPDATE_TIME=$(echo "$CONFIG_VALUES" | sed -n '4p')
+    KBU_UPDATE_URL=$(echo "$CONFIG_VALUES" | sed -n '5p')
+    AUTO_SELF_UPDATE=$(echo "$CONFIG_VALUES" | sed -n '6p')
+    AUTO_SELF_UPDATE_TIME=$(echo "$CONFIG_VALUES" | sed -n '7p')
+    save_config
+    # Update package-update timer unit.
+    if [ -f "$SYSTEMD_TIMER_FILE" ]; then
+      sed -i "s/OnCalendar=.*/OnCalendar=*-*-* ${UPDATE_TIME}:00/" "$SYSTEMD_TIMER_FILE"
+      if [ "$EUID" -eq 0 ]; then
+        systemctl daemon-reload
+        systemctl restart kbu.timer
+      else
+        systemctl --user daemon-reload
+        systemctl --user restart kbu.timer
+      fi
+    fi
+    # Update self-update timer.
+    setup_auto_self_update "$(dirname "$SYSTEMD_TIMER_FILE")" "$(which kbu)"
+    whiptail --title "Settings Updated" --msgbox "Settings saved and timers updated." 8 60
+  fi
+}
+
+###############################################################################
+# MAIN MENU (Terminal GUI with Organized Sections)
+###############################################################################
+main_menu() {
+  while true; do
+    MAIN_CHOICE=$(whiptail --title "KindaBadUtils (kbu) Main Menu" --menu "Select a section:" 20 60 6 \
+      "1" "Updates" \
+      "2" "Maintenance" \
+      "3" "System Info" \
+      "4" "Settings" \
+      "5" "Self-Update" \
+      "6" "Exit" 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then break; fi
+
+    case "$MAIN_CHOICE" in
+      "1")
+        while true; do
+          UPDATE_CHOICE=$(whiptail --title "Updates" --menu "Select an update option:" 15 60 4 \
+            "1" "Update Official Packages" \
+            "2" "Update AUR Packages" \
+            "3" "Update Both" \
+            "4" "Back" 3>&1 1>&2 2>&3)
+          [ $? -ne 0 ] && break
+          case "$UPDATE_CHOICE" in
+            "1") update_system ;;
+            "2") update_aur ;;
+            "3") update_both ;;
+            "4") break ;;
+          esac
+        done
+        ;;
+      "2")
+        while true; do
+          MAINT_CHOICE=$(whiptail --title "Maintenance" --menu "Select a maintenance option:" 18 60 7 \
+            "1" "Clean Package Cache" \
+            "2" "Remove Orphan Packages" \
+            "3" "Backup Configuration Files" \
+            "4" "Update Mirror List" \
+            "5" "List Installed Packages" \
+            "6" "View Update Log" \
+            "7" "Back" 3>&1 1>&2 2>&3)
+          [ $? -ne 0 ] && break
+          case "$MAINT_CHOICE" in
+            "1") clean_cache ;;
+            "2") remove_orphans ;;
+            "3") backup_configs ;;
+            "4") update_mirrors ;;
+            "5") list_installed_packages ;;
+            "6") view_log ;;
+            "7") break ;;
+          esac
+        done
+        ;;
+      "3")
+        while true; do
+          SYSINFO_CHOICE=$(whiptail --title "System Info" --menu "Select an option:" 18 60 5 \
+            "1" "Show Disk Usage" \
+            "2" "Show System Summary" \
+            "3" "Show Memory Usage" \
+            "4" "Show CPU Load" \
+            "5" "Back" 3>&1 1>&2 2>&3)
+          [ $? -ne 0 ] && break
+          case "$SYSINFO_CHOICE" in
+            "1") show_disk_usage ;;
+            "2") show_system_summary ;;
+            "3") show_memory_usage ;;
+            "4") show_cpu_load ;;
+            "5") break ;;
+          esac
+        done
+        ;;
+      "4") settings_menu ;;
+      "5") update_script ;;
+      "6") break ;;
+    esac
+  done
+  clear
+}
+
+###############################################################################
+# MAIN EXECUTION
+###############################################################################
+if [ "$1" == "install" ]; then
+  install_kbu
+fi
+
+if [ "$1" == "--self-update" ]; then
+  update_script
+  exit 0
+fi
+
+check_whiptail
+load_config
+main_menu
+
+exit 0
